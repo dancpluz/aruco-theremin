@@ -3,7 +3,7 @@ use opencv::{
     videoio,
     highgui,
     imgproc,
-    core::Size,
+    core::{Size, Point, Scalar, Vector, no_array},
 };
 /*
 fn cam() -> opencv::Result<videoio::VideoCapture> {
@@ -54,7 +54,7 @@ fn cam() -> opencv::Result<videoio::VideoCapture> {
 
 fn main() -> opencv::Result<()> {
     // 1. Inicializar a captura do ARQUIVO DE VÍDEO
-    let mut cam = videoio::VideoCapture::from_file("video.mp4", videoio::CAP_ANY)
+    let mut cam = videoio::VideoCapture::from_file("video2.mp4", videoio::CAP_ANY)
         .expect("Não foi possível abrir o arquivo de vídeo"); 
 
     let opened = videoio::VideoCapture::is_opened(&cam)
@@ -72,6 +72,8 @@ fn main() -> opencv::Result<()> {
     let mut gray_frame = Mat::default();
     let mut blurred_frame = Mat::default();
     let mut edges_frame = Mat::default();
+    let mut dilated_frame = Mat::default();
+    let mut contours = Vector::<Vector<Point>>::new();
 
     // 4. Iniciar o loop de captura (com replay automático ao fim)
     loop {
@@ -108,14 +110,44 @@ fn main() -> opencv::Result<()> {
             imgproc::canny(
                 &blurred_frame,
                 &mut edges_frame,
-                50.0,
                 150.0,
+                200.0,
                 3,
                 false
             )?;
 
+            imgproc::dilate(
+                &edges_frame,
+                &mut dilated_frame, // <-- 2. USADO AQUI
+                &no_array(), // Usa um kernel padrão
+                Point::new(-1, -1), // Posição da âncora (padrão)
+                1, // Número de iterações
+                0, // Tipo de borda
+                Scalar::default() // Valor da borda
+            )?;
+
+            imgproc::find_contours(
+                &mut dilated_frame,
+                &mut contours,
+                imgproc::RETR_EXTERNAL,
+                imgproc::CHAIN_APPROX_SIMPLE,
+                Point::new(0, 0)
+            )?;
+
+            imgproc::draw_contours(
+                &mut frame,                                 // Imagem onde vamos desenhar
+                &contours,                                  // A lista de contornos
+                -1,                                         // Índice (-1 = desenhar todos)
+                Scalar::new(0.0, 255.0, 0.0, 0.0), // Cor (Verde)
+                2,                                          // Espessura
+                imgproc::LINE_8,                            // Tipo de linha
+                &no_array(),                                // Hierarquia (não precisamos agora)
+                0,                                          // Nível máximo
+                Point::new(0, 0)                            // Offset
+            )?;
+
             // Exibe o resultado das bordas
-            highgui::imshow("Video", &edges_frame)?;
+            highgui::imshow("Video", &dilated_frame)?;
         }
 
         // 6. Esperar por uma tecla (por 30ms)
