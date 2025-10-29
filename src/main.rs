@@ -2,6 +2,7 @@ use opencv::{
     prelude::*,
     videoio,
     highgui,
+    imgproc
 };
 /*
 fn cam() -> opencv::Result<videoio::VideoCapture> {
@@ -67,25 +68,27 @@ fn main() -> opencv::Result<()> {
 
     // 3. Criar um Mat (Matriz) para armazenar cada frame
     let mut frame = Mat::default();
+    let mut gray_frame = Mat::default();
 
-    // 4. Iniciar o loop de captura
+    // 4. Iniciar o loop de captura (com replay automático ao fim)
     loop {
         // Tenta ler um frame do vídeo
         let read_success = cam.read(&mut frame)?;
-        
+
+        // Se não conseguiu ler (fim do vídeo), volta ao início do vídeo
         if !read_success {
-            println!("Fim do vídeo ou erro de leitura.");
-            break; // Sai do loop se o vídeo terminar
+            println!("Fim do vídeo. Reiniciando...");
+            // Rebobina o vídeo para o frame 0
+            cam.set(videoio::CAP_PROP_POS_FRAMES, 0.0)?;
+            continue;
         }
 
-        // 5. Exibir o frame na janela
-        if frame.size()?.width > 0 {
-            highgui::imshow("Video", &frame)?;
-        }
+        // 5. Converter para gris e exibir o frame na janela
+        imgproc::cvt_color(&frame, &mut gray_frame, imgproc::COLOR_BGR2GRAY, 0)?;
+        highgui::imshow("Video", &gray_frame)?;
 
         // 6. Esperar por uma tecla (por 30ms)
-        //    Isso controla a velocidade de reprodução do vídeo (aprox. 33 FPS)
-        let key = highgui::wait_key(30)?; // <-- MUDANÇA AQUI
+        let key = highgui::wait_key(30)?;
         if key == 'q' as i32 || key == 27 { // 'q' ou ESC
             break;
         }
