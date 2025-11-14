@@ -6,3 +6,5 @@ edition = "2021"
 [dependencies]
 mediapipe-rs = { git = "https://github.com/WasmEdge/mediapipe-rs" }
 imageproc = "0.24"
+image = "0.25.8"
+serde_json = "1.0" 

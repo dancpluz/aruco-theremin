@@ -4,6 +4,5 @@
 .idea
 .vscode
 
-/process_landmarks/assets
 /process_landmarks/target
 /process_landmarks/Cargo.lock

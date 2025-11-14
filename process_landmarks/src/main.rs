@@ -1,23 +1,36 @@
-use mediapipe_rs::tasks::vision::HandLandmarkerBuilder; // Check exact struct name
+use mediapipe_rs::tasks::vision::HandLandmarkerBuilder;
+
+fn parse_args() -> Result<(String, String, Option<String>), Box<dyn std::error::Error>> {
+    let args: Vec<String> = std::env::args().collect();
+    if args.len() != 3 && args.len() != 4 {
+        return Err(format!(
+            "Usage: {} <model_path> <image_path> [output_image_path]",
+            args[0]
+        )
+        .into());
+    }
+    Ok((args[1].clone(), args[2].clone(), args.get(3).cloned()))
+}
 
 fn main() -> Result<(), Box<dyn std::error::Error>> {
-    // It's common to load the model from a file included in the binary
-    let model_path = "assets/models/hand_landmark_detection/hand_landmarker.task";
-    
-    // Create the hand landmark detector using the builder pattern
-    let hand_landmarker = HandLandmarkerBuilder::new() // Check exact builder name
-        .max_results(2) // Set the number of hands to detect
-        .build_from_file(model_path)?;
+    let (model_path, img_path, output_path) = parse_args()?;
 
-    // Imagine this image data is received from another process
-    let image_data: Vec<u8> = receive_image_data();
-    let input_image = image::load_from_memory(&image_data)?;
+    let mut input_img = image::open(&img_path)?;
+    let hand_landmark_results = HandLandmarkerBuilder::new()
+        .min_hand_detection_confidence(0.5)
+        .build_from_file(model_path)?
+        .detect(&input_img)?;
 
-    // Run inference on the image
-    let detection_result = hand_landmarker.detect(&input_image)?; // Check exact function name
+    println!("{}", hand_landmark_results);
 
-    // Now send the result (e.g., as JSON) back to the visualizer
-    send_landmarks_to_visualizer(detection_result);
-    
+    // Draw landmarks without specifying custom connections
+    if let Some(output_path) = output_path {
+        for result in hand_landmark_results.iter() {
+            // Use the default drawing method, if it exists
+            result.draw(&mut input_img); 
+        }
+        input_img.save(&output_path)?;
+    }
+
     Ok(())
 }
