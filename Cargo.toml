@@ -5,3 +5,5 @@ edition = "2024"
 
 [dependencies]
 opencv = "0.97"
+cpal = "0.16"
+atomic_float = "1.1"

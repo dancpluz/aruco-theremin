@@ -1,28 +1,24 @@
 mod camera;
 mod config;
-mod detector;
-mod ui;
-mod processor;
 
 use opencv::core::Mat;
+use opencv::highgui::{WINDOW_NORMAL, imshow, named_window, wait_key};
 use std::error::Error;
 
 fn main() -> Result<(), Box<dyn Error>> {
-    println!("=== Detecção de Movimento de Mãos em Tempo Real ===");
-    
+    println!("=== Captura de Vídeo Simples ===");
+    println!("Pressione ESC para sair");
+    println!();
+
     // Inicializar câmera ou vídeo
     let (mut cam, is_camera) = camera::initialize_capture()?;
-    
-    // Exibir controles
-    ui::print_controls();
-    
-    // Criar janelas
-    ui::create_windows()?;
-    
-    // Estado da aplicação
-    let mut app_state = processor::AppState::new();
-    let config = config::DetectionConfig::default();
-    
+
+    // Criar janela
+    named_window("Video", WINDOW_NORMAL)?;
+
+    println!("▶️  Iniciando captura...");
+    println!();
+
     // Loop principal
     loop {
         // Capturar frame
@@ -30,29 +26,18 @@ fn main() -> Result<(), Box<dyn Error>> {
         if !camera::read_frame(&mut cam, &mut frame, is_camera)? {
             break;
         }
-        
-        // Processar frame
-        let detection_result = processor::process_frame(
-            &mut frame,
-            &mut app_state,
-            &config,
-        )?;
-        
-        // Renderizar UI
-        ui::render_frame(&mut frame, &detection_result, &app_state)?;
-        
+
         // Mostrar frame
-        ui::display_frame(&frame, &app_state)?;
-        
-        // Atualizar estado anterior
-        app_state.update_previous_frame();
-        
-        // Processar input do teclado
-        if !ui::handle_keyboard_input(&mut app_state, &frame)? {
+        imshow("Video", &frame)?;
+
+        // Verificar tecla ESC (código 27)
+        let key = wait_key(30)?;
+        if key == 27 {
+            println!("\n✅ Encerrando...");
             break;
         }
     }
-    
+
     println!("Programa finalizado!");
     Ok(())
 }
