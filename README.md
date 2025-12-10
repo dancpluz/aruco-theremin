@@ -1,32 +1,39 @@
-# Tarefas
+# ArUco Theremin
 
-- [ ] Processamento de imagem
-  - [x] Fazer o código buildar
-  - [ ] Rodar webcam
-  - [ ] Reconhecer mão
-  - [ ] Mapear no vídeo o parâmetro
-  - [ ] Conectar com o processamento de áudio
-- [ ] Processamento de áudio
-  - [x] Fazer o áudio tocar
-  - [ ] Rodar em tempo real
-  - [ ] Conseguir operar inputs em tempo real
-- [ ] Criar Wiki
+Um instrumento virtual controlado por câmera escrito em Rust. O projeto rastreia um marcador ArUco (ID 0) e transforma a posição dele em som.
 
-# Backlog
+## Compatibilidade
 
-- [ ] Aplicar numa música
-- [ ] Rodar em um site
+| Sistema | Status | Observação |
+|---|---|---|
+| Windows | Funcional | Roda nativamente. |
+| WSL | Nao funciona | Problemas com driver de vídeo/áudio. |
+| Linux/Mac | Nao testado | Sem informação. |
 
-# Execução no WSL
+## Pré-requisitos para Compilar
 
-## Configuração Rápida
+Para que o projeto compile e rode, você precisa ter instalado no seu sistema:
+
+1.  **Rust** (via Cargo).
+2.  **OpenCV 4.11**: É **obrigatório** ter a versão 4.11 instalada e configurada nas variáveis de ambiente (ou via `vcpkg` no Windows). Sem isso, o crate `opencv` não irá compilar.
+
+## Como Usar
+
+Você precisa deste marcador ArUco (ID 0, Dicionário Original) impresso ou na tela do celular para que a câmera o detecte.
+
+![Marcador ArUco ID 0](https://i.imgur.com/aMocBi0.png)
+
+No terminal, execute:
 
 ```bash
-# 1. Dar permissão aos scripts
-chmod +x *.sh
+cargo run --release
+````
 
-# 2. Instalação simples
-./install_wsl_simple.sh
+### Controles
 
-# 3. Executar
-./run_wsl.sh
+  * **Movimento do Marcador:**
+      * Vertical: Controla a nota (Agudo/Grave).
+      * Horizontal: Controla o volume.
+  * **Teclado:**
+      * `ESPAÇO`: Liga/Desliga o som.
+      * `ESC`: Fecha o programa.
