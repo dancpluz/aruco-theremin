@@ -1,5 +1,16 @@
 # ArUco Theremin
 
+Este projeto foi desenvolvido para a disciplina de Linguagens de Programação da Universidade de Brasília (UnB) no semestre 2025.2.
+
+**Grupo:**
+* Daniel Luz
+* Davi Vidal
+* Tiago Amaral
+
+**Professor:** Marcelo Ladeira
+
+## Sobre o Projeto
+
 Um instrumento virtual controlado por câmera escrito em Rust. O projeto rastreia um marcador ArUco (ID 0) e transforma a posição dele em som.
 
 ## Compatibilidade
@@ -27,13 +38,3 @@ No terminal, execute:
 
 ```bash
 cargo run --release
-````
-
-### Controles
-
-  * **Movimento do Marcador:**
-      * Vertical: Controla a nota (Agudo/Grave).
-      * Horizontal: Controla o volume.
-  * **Teclado:**
-      * `ESPAÇO`: Liga/Desliga o som.
-      * `ESC`: Fecha o programa.
