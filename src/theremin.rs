@@ -3,14 +3,12 @@ use std::f32::consts::PI;
 use std::sync::{Arc, Mutex};
 use std::time::Duration;
 
-/// Estado compartilhado do theremin
 struct ThereminState {
     amplitude: f32,
     frequency: f32,
     enabled: bool,
 }
 
-/// Fonte de áudio do theremin
 pub struct ThereminSource {
     state: Arc<Mutex<ThereminState>>,
     sample_rate: u32,
@@ -31,32 +29,27 @@ impl ThereminSource {
         }
     }
 
-    /// Atualiza a amplitude e frequência do theremin
     pub fn update_parameters(&self, amplitude: f32, frequency: f32) {
         let mut state = self.state.lock().unwrap();
         state.amplitude = amplitude;
         state.frequency = frequency;
     }
 
-    /// Ativa/desativa o som
     pub fn set_enabled(&self, enabled: bool) {
         let mut state = self.state.lock().unwrap();
         state.enabled = enabled;
     }
 
-    /// Verifica se o theremin está ativo
     pub fn is_enabled(&self) -> bool {
         let state = self.state.lock().unwrap();
         state.enabled
     }
 
-    /// Obtém a amplitude atual
     pub fn get_amplitude(&self) -> f32 {
         let state = self.state.lock().unwrap();
         state.amplitude
     }
 
-    /// Obtém a frequência atual
     pub fn get_frequency(&self) -> f32 {
         let state = self.state.lock().unwrap();
         state.frequency
@@ -108,7 +101,6 @@ impl Source for ThereminSource {
     }
 }
 
-/// Controlador do theremin
 pub struct ThereminController {
     _stream: OutputStream,
     sink: Sink,
@@ -135,21 +127,19 @@ impl ThereminController {
         })
     }
 
-    /// Atualiza os parâmetros do theremin com base na posição normalizada (x, y)
     pub fn update_from_position(&mut self, x: f32, y: f32) {
         let (frequency, amplitude) = Self::map_position_to_audio(x, y);
 
-        // Guarda os últimos valores mesmo se o som estiver desativado
+        // últimos valores mesmo se o som estiver desativado
         self.last_amplitude = amplitude;
         self.last_frequency = frequency;
 
-        // Atualiza o som apenas se estiver ativado
+        // atualiza o som apenas se estiver ativado
         if self.is_enabled() {
             self.source.update_parameters(amplitude, frequency);
         }
     }
 
-    /// Mapeia a posição normalizada (x, y) para frequência e amplitude
     fn map_position_to_audio(x: f32, y: f32) -> (f32, f32) {
         let amplitude = match x {
             x if (-1.0 <= x) && (x < -0.80) => 0.10,
@@ -182,43 +172,36 @@ impl ThereminController {
         (frequency, amplitude)
     }
 
-    /// Ativa/desativa o som
     pub fn toggle_sound(&mut self) {
         let enabled = !self.is_enabled();
         self.source.set_enabled(enabled);
 
         if enabled {
-            // Quando reativa, usa os últimos valores guardados
             self.source
                 .update_parameters(self.last_amplitude, self.last_frequency);
-            println!("🔊 Som ativado");
+            println!("[ON] Som ativado");
         } else {
-            println!("🔇 Som desativado");
+            println!("[OFF] Som desativado");
         }
     }
 
-    /// Verifica se o som está ativado
     pub fn is_enabled(&self) -> bool {
         self.source.is_enabled()
     }
 
-    /// Obtém a frequência atual
     pub fn get_frequency(&self) -> f32 {
         self.source.get_frequency()
     }
 
-    /// Obtém a amplitude atual
     pub fn get_amplitude(&self) -> f32 {
         self.source.get_amplitude()
     }
 
-    /// Para o áudio
     pub fn stop(&mut self) {
         self.sink.stop();
     }
 }
 
-// Implementação de Clone para ThereminSource
 impl Clone for ThereminSource {
     fn clone(&self) -> Self {
         Self {

@@ -1,26 +1,24 @@
 use opencv::{
     core::{Point2f, Vector},
-    objdetect::{
-        ArucoDetector, DetectorParameters, PredefinedDictionaryType, RefineParameters,
-        get_predefined_dictionary,
-    },
-    prelude::{ArucoDetectorTraitConst},
+    objdetect::{ArucoDetector, DetectorParameters, RefineParameters, get_predefined_dictionary},
+    prelude::ArucoDetectorTraitConst,
 };
 use std::error::Error;
 
-use crate::ui::{DetectedMarker, NormalizedPosition};
+use crate::{
+    config::{DEFAULT_MIN_MARKER_SIZE, DICTIONARY_TYPE},
+    ui::{DetectedMarker, NormalizedPosition},
+};
 
-/// Processador principal para detecção de ArUco
 pub struct ArucoProcessor {
     detector: ArucoDetector,
-    min_marker_size: f32, // Tamanho mínimo do marcador em pixels
+    min_marker_size: f32,
     last_position: NormalizedPosition,
 }
 
 impl ArucoProcessor {
-    /// Cria um novo processador ArUco
     pub fn new() -> Result<Self, Box<dyn Error>> {
-        let dictionary = get_predefined_dictionary(PredefinedDictionaryType::DICT_ARUCO_ORIGINAL)?;
+        let dictionary = get_predefined_dictionary(DICTIONARY_TYPE)?;
         let parameters = DetectorParameters::default()?;
         let refine_params = RefineParameters {
             min_rep_distance: 10.0,
@@ -32,12 +30,11 @@ impl ArucoProcessor {
 
         Ok(ArucoProcessor {
             detector,
-            min_marker_size: 30.0,
-            last_position: NormalizedPosition::new(0.0, 0.0, false, None),
+            min_marker_size: DEFAULT_MIN_MARKER_SIZE,
+            last_position: NormalizedPosition::new(0.0, 0.0, false),
         })
     }
 
-    /// Detecta marcadores em um frame de vídeo com filtro de tamanho
     pub fn detect_markers(
         &self,
         frame: &opencv::core::Mat,
@@ -64,9 +61,8 @@ impl ArucoProcessor {
         Ok(markers)
     }
 
-    /// Verifica se um marcador é válido
     fn is_marker_valid(&self, marker: &DetectedMarker) -> bool {
-        // Calcular perímetro
+        // calcular perímetro
         let corners = &marker.corners;
         if corners.len() != 4 {
             return false;
@@ -84,7 +80,7 @@ impl ArucoProcessor {
             return false;
         }
 
-        // Verificar se é aproximadamente quadrado
+        // verificar se é aproximadamente quadrado
         let mut side_lengths = Vec::new();
         for i in 0..4 {
             let j = (i + 1) % 4;
@@ -102,7 +98,6 @@ impl ArucoProcessor {
         max_variation < 0.3
     }
 
-    /// Calcula a posição normalizada do marcador 0
     pub fn calculate_marker0_position(
         &mut self,
         frame_width: i32,
@@ -113,31 +108,18 @@ impl ArucoProcessor {
             if marker.id == 0 {
                 let center = marker.center;
 
-                // Normalizar posição para [-1, 1]
+                // normalizar posição para [-1, 1]
                 let x_normalized = ((center.x * 2.0) / frame_width as f32) - 1.0;
                 let y_normalized = ((center.y * 2.0) / frame_height as f32) - 1.0;
 
-                // Centro em pixels
-                let center_px = Some(opencv::core::Point::new(center.x as i32, center.y as i32));
-                
-                let position = NormalizedPosition::new(x_normalized, y_normalized, true, center_px);
+                let position = NormalizedPosition::new(x_normalized, y_normalized, true);
                 self.last_position = position;
                 return position;
             }
         }
 
-        // Marcador não detectado
-        let position = NormalizedPosition::new(0.0, 0.0, false, None);
+        let position = NormalizedPosition::new(0.0, 0.0, false);
         self.last_position = position;
         position
-    }
-
-    /// Ajusta o tamanho mínimo do marcador
-    pub fn set_min_marker_size(&mut self, size: f32) {
-        self.min_marker_size = size.max(10.0);
-        println!(
-            "🔧 Tamanho mínimo ajustado para: {} pixels",
-            self.min_marker_size
-        );
     }
 }
