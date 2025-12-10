@@ -1,0 +1,9 @@
+[package]
+name = "theremin-synth"
+version = "0.1.0"
+edition = "2021"
+
+[dependencies]
+rodio = "0.17"
+cpal = "0.15"
+crossterm = "0.27"
